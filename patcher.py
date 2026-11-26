@@ -1,6 +1,14 @@
+"""Patch the Hay Day IPA to point at this server.
+
+Usage: python3 patcher.py <in.ipa> <out.ipa> [host] [port]
+
+If host is omitted, the LAN IP of this machine is used automatically.
+"""
 import re
 import sys
 import zipfile
+
+from Utils.Net import get_lan_ip
 
 URL = re.compile(rb'http://[^\x00/]+/+env_settings\?[^\x00]*')
 
@@ -24,14 +32,15 @@ def patch(data, host, port):
 
 
 def main():
-    if len(sys.argv) < 4:
+    if len(sys.argv) < 3:
         sys.exit(__doc__)
-    src, dst, host = sys.argv[1:4]
+    src, dst = sys.argv[1:3]
+    host = sys.argv[3] if len(sys.argv) > 3 else get_lan_ip()
     port = sys.argv[4] if len(sys.argv) > 4 else '8080'
     with zipfile.ZipFile(src) as zi, zipfile.ZipFile(dst, 'w', zipfile.ZIP_DEFLATED) as zo:
         for i in zi.infolist():
             data = zi.read(i.filename)
-            if i.filename.endswith('.app/Hay Day'):  # main executable
+            if i.filename.endswith('.app/Hay Day'):
                 data, n = patch(data, host, port)
                 if n != 3:
                     sys.exit('expected 3 env_settings URLs, patched {}'.format(n))
