@@ -18,4 +18,6 @@ class EndClientTurnMessage(Reader):
             self.commands = b''
 
     def process(self):
+        if self.device.player is not None:
+            self.device.player.save()
         EndClientTurnOkMessage(self.device).Send()

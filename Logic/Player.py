@@ -24,6 +24,21 @@ class Player:
         return os.path.join(cls.DIRECTORY, '{}_{}.json'.format(high, low))
 
     @classmethod
+    def next_low(cls, high, config):
+        os.makedirs(cls.DIRECTORY, exist_ok=True)
+        used = set()
+        for name in os.listdir(cls.DIRECTORY):
+            if name.startswith('{}_'.format(high)) and name.endswith('.json'):
+                try:
+                    used.add(int(name[:-5].split('_', 1)[1]))
+                except ValueError:
+                    pass
+        low = config.get('AccountLowID', 1)
+        while low in used:
+            low += 1
+        return low
+
+    @classmethod
     def load(cls, high, low):
         path = cls.path(high, low)
         if not os.path.exists(path):
@@ -39,10 +54,11 @@ class Player:
         return player
 
     @classmethod
-    def create(cls, config):
+    def create(cls, config, high=None, low=None):
         data = GameData()
         tutorialTable = config.get('TutorialTable', 36)
-        player = cls(config['AccountHighID'], config['AccountLowID'])
+        player = cls(high if high is not None else config['AccountHighID'],
+                     low if low is not None else config['AccountLowID'])
         player.passToken = config.get('PassToken', '')
         player.name = config.get('Name', 'Farmer')
         player.money = {

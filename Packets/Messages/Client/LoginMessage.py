@@ -18,7 +18,7 @@ class LoginMessage(Reader):
             self.resourceSha = self.readString()
             print('[*] login id={} sha={}'.format(self.accountId, self.resourceSha))
         except Exception:
-            self.accountId = None
+            self.accountId = 0
             self.passToken = ''
 
     def process(self):
@@ -27,11 +27,15 @@ class LoginMessage(Reader):
             LoginFailedMessage(self.device, 10, "Maintenance").Send()
             return
 
-        high = config['AccountHighID']
-        low = config['AccountLowID']
+        account = getattr(self, 'accountId', 0) or 0
+        high = account >> 32 if account else config['AccountHighID']
+        if not high:
+            high = config['AccountHighID']
+        low = account & 0xFFFFFFFF if account else Player.next_low(high, config)
+
         player = Player.load(high, low)
         if player is None:
-            player = Player.create(config)
+            player = Player.create(config, high, low)
             print('[*] created new account {} ({}.{})'.format(player.name, player.high, player.low))
         else:
             print('[*] loaded account {} ({}.{})'.format(player.name, player.high, player.low))

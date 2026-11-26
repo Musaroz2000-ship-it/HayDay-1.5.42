@@ -5,6 +5,7 @@ from Packets.MessageFactory import *
 from Logic.Device import Device
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
+import os
 
 
 class ServerThread():
@@ -16,7 +17,8 @@ class ServerThread():
     def start(self):
         self.client.bind((self.address, self.port))
 
-        print(f"[*] Server is listening on {self.address}:{self.port}\nLet's play HayDay!".format(self.address, self.port))
+        print('[*] Server is listening on {}:{}'.format(self.address, self.port))
+        print("[*] Let's play HayDay!")
 
         while True:
             self.client.listen(5)
@@ -110,6 +112,8 @@ class EnvHandler(BaseHTTPRequestHandler):
 
 if __name__ == '__main__':
     conf = json.load(open("config.json"))
-    Thread(target=ThreadingHTTPServer(("0.0.0.0", conf["HttpPort"]), EnvHandler).serve_forever, daemon=True).start()
-    server = ServerThread("0.0.0.0", conf["Port"])
+    port = int(os.environ.get('HAYDAY_PORT', conf["Port"]))
+    http_port = int(os.environ.get('HAYDAY_HTTP_PORT', conf["HttpPort"]))
+    Thread(target=ThreadingHTTPServer(("0.0.0.0", http_port), EnvHandler).serve_forever, daemon=True).start()
+    server = ServerThread("0.0.0.0", port)
     server.start()
