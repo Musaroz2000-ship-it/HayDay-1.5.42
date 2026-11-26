@@ -1,11 +1,5 @@
-import json
 from Utils.Writer import Writer
 from Logic.ClientAvatar import LogicClientAvatar
-from Logic.GameData import GameData
-
-conf = json.load(open("config.json"))
-data = GameData()
-home = open(conf["HomeFile"]).read()
 
 
 class OwnHomeDataMessage(Writer):
@@ -16,7 +10,8 @@ class OwnHomeDataMessage(Writer):
         self.id = 24101
 
     def encode(self):
+        player = self.device.player
         self.writeInt(0)  # startTime
-        self.writeString(home)  # farm
-        LogicClientAvatar(conf, data).encode(self)
+        self.writeString(player.home)  # farm
+        LogicClientAvatar(player).encode(self)
         self.writeInt(0)

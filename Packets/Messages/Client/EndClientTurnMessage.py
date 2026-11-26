@@ -9,7 +9,13 @@ class EndClientTurnMessage(Reader):
         self.device = device
 
     def decode(self):
-        pass
+        try:
+            self.turn = self.readInt()
+            self.time = self.readInt()
+            self.commands = self.buffer[self.i:]
+            print('[*] turn {} ({} command bytes)'.format(self.turn, len(self.commands)))
+        except Exception:
+            self.commands = b''
 
     def process(self):
         EndClientTurnOkMessage(self.device).Send()

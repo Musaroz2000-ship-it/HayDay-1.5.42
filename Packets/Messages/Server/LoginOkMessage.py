@@ -1,4 +1,3 @@
-import json
 from Utils.Writer import Writer
 
 
@@ -10,10 +9,10 @@ class LoginOkMessage(Writer):
         self.id = 20104
 
     def encode(self):
-        c = json.load(open("config.json"))
+        p = self.device.player
         for _ in range(3):
-            self.writeInt(c['AccountHighID']); self.writeInt(c['AccountLowID'])
-        self.writeString(c['PassToken'])
+            self.writeInt(p.high); self.writeInt(p.low)
+        self.writeString(p.passToken)
         self.writeString()  # facebookId
         self.writeString()  # gameCenterId
         self.writeInt(1)    # sessionCount

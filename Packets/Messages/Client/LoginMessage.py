@@ -2,6 +2,7 @@ import json
 from Utils.Reader import Reader
 from Packets.Messages.Server.LoginOkMessage import LoginOkMessage
 from Packets.Messages.Server.LoginFailedMessage import LoginFailedMessage
+from Logic.Player import Player
 
 
 class LoginMessage(Reader):
@@ -17,10 +18,27 @@ class LoginMessage(Reader):
             self.resourceSha = self.readString()
             print('[*] login id={} sha={}'.format(self.accountId, self.resourceSha))
         except Exception:
-            pass
+            self.accountId = None
+            self.passToken = ''
 
     def process(self):
-        if json.load(open("config.json")).get("Maintenance"):
+        config = json.load(open("config.json"))
+        if config.get("Maintenance"):
             LoginFailedMessage(self.device, 10, "Maintenance").Send()
+            return
+
+        high = config['AccountHighID']
+        low = config['AccountLowID']
+        player = Player.load(high, low)
+        if player is None:
+            player = Player.create(config)
+            print('[*] created new account {} ({}.{})'.format(player.name, player.high, player.low))
         else:
-            LoginOkMessage(self.device).Send()
+            print('[*] loaded account {} ({}.{})'.format(player.name, player.high, player.low))
+
+        if getattr(self, 'passToken', ''):
+            player.passToken = self.passToken
+            player.save()
+
+        self.device.player = player
+        LoginOkMessage(self.device).Send()
