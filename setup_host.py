@@ -1,9 +1,10 @@
 import json
+import sys
 from Utils.Net import get_lan_ip
 
 
 def main():
-    ip = get_lan_ip()
+    ip = sys.argv[1] if len(sys.argv) > 1 else get_lan_ip()
     conf = json.load(open('config.json'))
     if conf.get('Host') != ip:
         conf['Host'] = ip
