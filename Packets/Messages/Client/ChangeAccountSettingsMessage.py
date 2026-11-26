@@ -8,7 +8,7 @@ class ChangeAccountSettingsMessage(Reader):
         self.device = device
 
     def decode(self):
-        pass
+        print('[*] change account settings payload: {}'.format(self.buffer.hex()))
 
     def process(self):
         pass

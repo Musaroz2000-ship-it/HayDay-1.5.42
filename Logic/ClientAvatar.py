@@ -1,35 +1,38 @@
-from Logic.GameData import BITLIST_TABLES
+from Logic.GameData import BITLIST_TABLES, GameData
 
 
 class LogicClientAvatar:
-    def __init__(self, config, data):
-        self.c = config
-        self.data = data
+    def __init__(self, player):
+        self.player = player
+        self.data = GameData()
 
     def encode(self, w):
-        c, d = self.c, self.data
-        w.writeInt(c['AccountHighID']); w.writeInt(c['AccountLowID'])
+        p = self.player
+        w.writeInt(p.high); w.writeInt(p.low)
 
-        money = [('Diamonds', c['Diamonds']), ('Cash', c['Cash']),
-                 ('ExpLevel', c['ExpLevel']), ('ExpPoints', c['ExpPoints'])]
-        res = [(d.gid(19, n), v) for n, v in money if v]
-        res = [(g, v) for g, v in res if g is not None]
+        res = []
+        for name, value in p.money.items():
+            if not value:
+                continue
+            gid = self.data.gid(19, name)
+            if gid is not None:
+                res.append((gid, value))
         w.writeInt(len(res), 2)
-        for g, v in res:
-            w.writeInt(g); w.writeInt(v)
+        for gid, value in res:
+            w.writeInt(gid); w.writeInt(value)
 
         for tid in BITLIST_TABLES:
-            n = d.count(tid)
+            n = self.data.count(tid)
+            bits = p.bits.get(tid, [])
             words = [0] * ((n + 31) // 32)
-            if c.get('SkipTutorial') and tid == c.get('TutorialTable', 36):
-                for i in range(n):
+            for i in range(min(len(bits), n)):
+                if bits[i]:
                     words[i >> 5] |= 1 << (i & 31)
             for x in words:
                 w.writeInt(x)
 
         w.writeInt(0, 2)  # roadside shop
-        w.writeString(c['Name'])  # name
+        w.writeString(p.name)  # name
         w.writeInt(0)  # mail
         w.writeInt(0)  # new shop items
         w.writeInt(0)  # shared boat crates
-

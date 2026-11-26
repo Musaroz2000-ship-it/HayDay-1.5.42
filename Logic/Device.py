@@ -6,6 +6,7 @@ class Device:
     def __init__(self, socket=None):
         self.socket = socket
         self.crypto = None
+        self.player = None
 
     def EnableCrypto(self, nonce: bytes):
         self.crypto = CryptoRc4(nonce)
